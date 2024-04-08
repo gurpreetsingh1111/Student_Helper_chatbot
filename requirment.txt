@@ -1,1 +1,3 @@
 replicate
+streamlit
+replicate
