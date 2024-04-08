@@ -1,6 +1,8 @@
 import streamlit as st
 import replicate
 import os
+import pandas as pd
+import base64
 
 # App title
 st.set_page_config(page_title="🦙💬 Llama 2 Chatbot")
@@ -32,7 +34,6 @@ with st.sidebar:
     top_p = st.sidebar.slider('top_p', min_value=0.01, max_value=1.0, value=0.9, step=0.01)
     max_length = st.sidebar.slider('max_length', min_value=64, max_value=4096, value=512, step=8)
     
-    st.markdown('📖 Learn how to build this app in this [blog](https://blog.streamlit.io/how-to-build-a-llama-2-chatbot/)!')
 os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
 # Store LLM generated responses
@@ -80,3 +81,21 @@ if st.session_state.messages[-1]["role"] != "assistant":
             placeholder.markdown(full_response)
     message = {"role": "assistant", "content": full_response}
     st.session_state.messages.append(message)
+
+# Button to save chat history to CSV
+if st.button('Save Chat History to CSV'):
+    df = pd.DataFrame(st.session_state.messages)
+    df.to_csv("chat_history.csv", index=False)
+    st.success("Chat history saved to chat_history.csv")
+
+
+def get_binary_file_downloader_html(bin_file, file_label='File'):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    bin_str = base64.b64encode(data).decode()
+    href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}">{file_label}</a>'
+    return href
+
+# Button to download CSV file
+if os.path.exists("chat_history.csv"):
+    st.markdown(get_binary_file_downloader_html("chat_history.csv", 'Download Chat History CSV'), unsafe_allow_html=True)
